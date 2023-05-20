@@ -1,8 +1,87 @@
-﻿@{
+﻿@model HomeViewModel
+@{
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Bytewardens</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<div id="grid" style="width:100vw;height:1000px;"></div>
+
+@section Scripts 
+{
+    <script>
+        var data = @Html.Raw(Json.Serialize(Model.Games));
+
+        var metaCriticFormatter = (row, cell, value, columnDef, dataContext) => {
+            if (value == null)
+                return null;
+            var element = $("<a></a>");
+            element.attr("href", "https://www.metacritic.com/" + value);
+            element.addClass("link-light link-underline-opacity-0");
+            element.text(dataContext.metacriticScore == 0 ? "tbd" : dataContext.metacriticScore);
+            var rtn = { text: element.prop('outerHTML'), removeClasses: 'bg-success bg-warning bg-danger bg-secondary' };
+            var score = dataContext.metacriticScore;
+            if (score !== null && score !== "") {
+                if (score == 0) {
+                    rtn.addClasses = "bg-secondary";
+                } else if (score < 33) {
+                    rtn.addClasses = "bg-danger";
+                } else if (score < 66) {
+                    rtn.addClasses = "bg-warning";
+                } else {
+                    rtn.addClasses = "bg-success";
+                }
+            }
+            return rtn;
+        }
+
+        var thumbFormatter = (row, cell, value, columnDef, dataContext) => {
+            var element = $("<img/>");
+            element.attr("src", value);
+            element.attr("width", columnDef.width);
+            element.attr("height", 100);
+            element.addClass("object-fit-contain");
+            return element.prop('outerHTML');
+        }
+
+        var salePriceFormatter = (row, cell, value, columnDef, dataContext) => {
+            if (value == 0) {
+                var rtn = { text: "BEDAVA" };
+                rtn.addClasses = "text-light bg-primary";
+                return rtn;
+            }
+            else {
+                return dollarFormatter(row, cell, value, columnDef, dataContext)
+            }
+        }
+
+        var streamRatingFormatter = (row, cell, value, columnDef, dataContext) => {
+            if (value == 0)
+                return "Not on Steam";
+
+            return percentageFormatter(row, cell, value, columnDef, dataContext);
+        };
+
+        var percentageFormatter = (row, cell, value, columnDef, dataContext) => {
+            return parseInt(value).toFixed(2) + "%";
+        };
+
+        var dollarFormatter = (row, cell, value, columnDef, dataContext) => {
+            return "$" + value;
+        };
+
+        var columns = [
+            { field: "thumb", formatter: thumbFormatter, name: "Image", width: 150,  },
+            { field: "title", width: 300 },
+            { field: "metacriticLink", name: "Meta Critic", formatter: metaCriticFormatter , width: 120 },
+            { field: "salePrice", formatter: salePriceFormatter, name: "İndirimli Fiyat", width: 130 },
+            { field: "normalPrice", name: "Normal Fiyat", formatter: dollarFormatter, width: 120 },
+            { field: "savings", name: "Kazanç", formatter: percentageFormatter },
+            { field: "steamRatingPercent", formatter: streamRatingFormatter, name: "Steam Beğenilme Oranı", width: 150 },
+        ];
+
+        var grid = new Slick.Grid($("#grid"), data, columns, {
+            enableCellNavigation: true,
+            rowHeight: 100,
+            usePager: true
+        });
+    </script>
+}

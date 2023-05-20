@@ -1,7 +1,13 @@
+using Bytewardens.Handlers;
+using Bytewardens.Models;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddHttpClient<IGameService, GameService>();
+builder.Services.AddOptions();
+builder.Services.Configure<GameApiOptions>(builder.Configuration.GetSection(GameApiOptions.SectionKey));
 
 var app = builder.Build();
 
