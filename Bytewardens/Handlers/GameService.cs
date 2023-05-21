@@ -1,12 +1,17 @@
 ﻿using Bytewardens.Models;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
+using System.Collections;
+using System.ComponentModel.DataAnnotations;
 
 namespace Bytewardens.Handlers
 {
-    public interface IGameService 
+    public interface IGameService
     {
-        Task<List<ListOfDealsResponse>> ListGamesAsync(int page);
+        Task<List<ListOfDealsResponse>> ListGamesAsync(IQueryCollection query);
+        Task<DealRetriveResponse> RetriveDealAsync(string dealId);
+        Task<List<Store>> ListStoresAsnyc();
+        Task<Store?> RetriveStore(string storeId);
     };
 
     public class GameService : IGameService
@@ -40,13 +45,48 @@ namespace Bytewardens.Handlers
             }
         }
 
-        public async Task<List<ListOfDealsResponse>> ListGamesAsync(int page)
+        Dictionary<string, string> KeyMapping = new()
         {
-            var response = await SendGetRequestAsync<List<ListOfDealsResponse>>("deals", new() {
-                { "pageNumber", page.ToString() }
+            { "Page", "pageNumber" },
+            { "MaxPrice", "upperPrice" }
+        };
+
+        public async Task<List<ListOfDealsResponse>> ListGamesAsync(IQueryCollection query)
+        {
+            var requestQuery = new Dictionary<string, string>();
+
+            foreach (var key in query.Keys)
+            {
+                requestQuery[KeyMapping[key]] = query[key].ToString();
+            }
+
+            var response = await SendGetRequestAsync<List<ListOfDealsResponse>>("deals", requestQuery);
+
+            return response ?? new();
+        }
+
+        public async Task<DealRetriveResponse> RetriveDealAsync(string dealId)
+        {
+            var response = await SendGetRequestAsync<DealRetriveResponse>("deals", new()
+            {
+                { "id", dealId }
             });
 
             return response ?? new();
+        }
+
+        public async Task<List<Store>> ListStoresAsnyc()
+        {
+            var response = await SendGetRequestAsync<List<Store>>("stores");
+
+            return response ?? new();
+        }
+
+        public async Task<Store?> RetriveStore(string storeId)
+        {
+            var stores = await ListStoresAsnyc();
+
+            return stores.FirstOrDefault(x => x.StoreID == storeId);
         }
     }
 }

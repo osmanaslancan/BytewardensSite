@@ -18,10 +18,24 @@ namespace Bytewardens.Controllers
 
         public async Task<IActionResult> IndexAsync()
         {
-            var games = await gameService.ListGamesAsync(0);
+            var games = await gameService.ListGamesAsync(Request.Query);
             return View(new HomeViewModel
             {
                 Games = games
+            });
+        }
+
+        [Route("/DealDetail/{dealId}")]
+        public async Task<IActionResult> DealDetailAsync(string dealId)
+        {
+            dealId = Uri.UnescapeDataString(dealId);
+            var deal = await gameService.RetriveDealAsync(dealId);
+            var store = await gameService.RetriveStore(deal.GameInfo.StoreID);
+
+            return View(new DealDetailViewModel
+            {
+                Deal = deal,
+                Store = store
             });
         }
 

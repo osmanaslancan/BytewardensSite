@@ -1,0 +1,64 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "group": "build",
+            "label": "build",
+            "dependsOn": [
+                "dotnet watch",
+                "tailwind watch"
+            ],
+        },
+        {
+            "label": "dotnet watch",
+            "command": "dotnet",
+            "group": "build",
+            "type": "process",
+            "args": [
+                "watch",
+                "run",
+                "${workspaceFolder}/Bytewardens/Bytewardens.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": {
+                "base": "$msCompile",
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Building\\.\\.\\.",
+                    "endsPattern": "info: .*"
+                }
+            },
+            "options": {
+                "cwd": "${workspaceFolder}/Bytewardens/"
+            },
+            "isBackground": true,
+        },
+        {
+            "type": "npm",
+            "script": "css:watch",
+            "group": "build",
+            "runOptions": {
+
+            },
+            "problemMatcher": {
+                "owner": "custom",
+				"pattern": { "regexp": "__________" },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": {
+                        "regexp": "^Rebuilding\\.\\.\\."
+                    },
+                    "endsPattern": {
+                        "regexp": "Done in \\d+ms\\."
+                    }
+                }
+            },
+            "label": "tailwind watch",
+            "isBackground": true,
+            "options": {
+                "cwd": "${workspaceFolder}/Bytewardens/"
+            }
+        }
+    ]
+}
