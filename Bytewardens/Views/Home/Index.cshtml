@@ -108,7 +108,13 @@
         $("tr").on('click', (e) => {
             var id = $(e.currentTarget).attr("data-id");
             if (id)
-                window.location.href = "/DealDetail/" + id;
+            {
+                var form = $(`<form action="/DealDetail" method="post"/>`);
+                var element = $(`<input type="hidden" name="DealID" value="${id}"/>`);
+                form.append(element);
+                form.appendTo(document.body);
+                form.submit();
+            }
         });
     })
 </script>

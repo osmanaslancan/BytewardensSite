@@ -25,11 +25,11 @@ namespace Bytewardens.Controllers
             });
         }
 
-        [Route("/DealDetail/{dealId}")]
-        public async Task<IActionResult> DealDetailAsync(string dealId)
+        [Route("/DealDetail"), HttpPost]
+        public async Task<IActionResult> DealDetailAsync([FromForm] string DealId)
         {
-            dealId = Uri.UnescapeDataString(dealId);
-            var deal = await gameService.RetriveDealAsync(dealId);
+            DealId = Uri.UnescapeDataString(DealId);
+            var deal = await gameService.RetriveDealAsync(DealId);
             var store = await gameService.RetriveStore(deal.GameInfo.StoreID);
 
             return View(new DealDetailViewModel
