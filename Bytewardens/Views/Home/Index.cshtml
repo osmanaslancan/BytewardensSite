@@ -1,8 +1,114 @@
-﻿@{
+﻿@using System.Globalization;
+@model HomeViewModel
+@{
     ViewData["Title"] = "Home Page";
+
+    string DollarFormat(string value, string? zeroValue = null)
+    {
+        if (float.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var floatValue))
+        {
+            if (floatValue == 0f)
+                return zeroValue ?? "";
+            return $"{floatValue:0.##}$";
+        }
+        return $"{floatValue:0.##}$";
+    }
+
+    string PercentFormat(string value, string? zeroValue = null) 
+    {
+        if (float.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var floatValue))
+        {
+            if (floatValue == 0f)
+                return zeroValue ?? "";
+            return $"{floatValue:0.##}%";
+        }
+        return $"{floatValue}%";
+    }
 }
 
-<div class="text-center">
-    <h1 class="display-4">Bytewardens</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<form class="form-floating m-3" method="get">
+    <input type="number" class="form-control w-48" value="@Context.Request.Query["MaxPrice"]" name="MaxPrice" id="FilterMaxPrice" placeholder="Max Fiyat">
+    <label for="FilterMaxPrice">Max Fiyat</label>
+    <input type="submit" value="Uygula" class="btn btn-primary mt-2"/>
+</form>
+<h2 class="m-3">
+    Ucuza Oyun Teklifleri
+</h2>
+<div class="table-responsive text-center vertical-center">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Image</th>
+                <th>Title</th>
+                <th>Meta Critic</th>
+                <th>İndirimli Fiyat</th>
+                <th>Normal Fiyat</th>
+                <th>Kazanç</th>
+                <th>Steam Beğenilme Oranı</th>
+            </tr>
+        </thead>
+        <tbody class="table-group-divider">
+            @foreach (var game in Model.Games)
+            {
+                <tr data-id="@game.DealID" class="cursor-pointer">
+                    <td>
+                        <img src="@game.Thumb" width="150" height="100" class="object-fit-contain " />
+                    </td>
+                    <td>@game.Title</td>
+                    @if (game.MetacriticLink != null)
+                    {
+                        var score = int.Parse(game.MetacriticScore);
+                        var bgClass = "";
+                        if (score >= 75)
+                        {
+                            bgClass = "bg-success";
+                        }
+                        else if (score >= 50)
+                        {
+                            bgClass = "bg-warning";
+                        }
+                        else
+                        {
+                            bgClass = "bg-danger";
+                        }
+                        <td>
+                            <div class="flex items-center justify-center">
+                                <a href="https://metacritic.com/@game.MetacriticLink" class="@bgClass w-12 h-12 border-r rounded-circle text-white no-underline fw-bold flex items-center justify-center">
+                                    @game.MetacriticScore
+                                </a>
+                            </div>
+                        </td>
+
+                    }
+                    else
+                    {
+                        <td></td>
+                    }
+                    <td>
+                        @DollarFormat(game.SalePrice, "Bedava")
+                    </td>
+                    <td>
+                        @DollarFormat(game.NormalPrice, "Bedava")
+                    </td>
+                    <td>
+                        @PercentFormat(game.Savings)
+                    </td>
+                    <td>
+                        @PercentFormat(game.SteamRatingPercent)
+                    </td>
+                </tr>
+            }
+        </tbody>
+        <tfoot></tfoot>
+    </table>
 </div>
+
+<script>
+    $(() => {
+        $("tr").on('click', (e) => {
+            var id = $(e.currentTarget).attr("data-id");
+            if (id)
+                window.location.href = "/DealDetail/" + id;
+        });
+    })
+</script>
