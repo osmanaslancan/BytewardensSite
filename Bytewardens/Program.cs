@@ -3,6 +3,7 @@ using Bytewardens.Handlers;
 using Bytewardens.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,19 +15,37 @@ builder.Services.Configure<GameApiOptions>(builder.Configuration.GetSection(Game
 #if DEBUG
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 #elif RELEASE
-var connectionString = Environment.GetEnvironmentVariable("MYSQLCONNSTR_localdb");
+var connectionString = File.ReadAllText("D:\\home\\data\\mysql\\MYSQLCONNSTR_localdb.txt");
 #endif
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
+{
+#if DEBUG
+    options.UseSqlServer(connectionString);
+#else
+    options.UseMySQL(connectionString);
+#endif
+}
+    );
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddDefaultIdentity<IdentityUser>(options =>
 {
-
 }).AddEntityFrameworkStores<ApplicationDbContext>();
 
+
 var app = builder.Build();
+
+
+// Migrate latest database changes during startup
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider
+        .GetRequiredService<ApplicationDbContext>();
+
+    // Here is the migration executed
+    dbContext.Database.Migrate();
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
