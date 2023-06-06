@@ -16,7 +16,8 @@ builder.Services.Configure<GameApiOptions>(builder.Configuration.GetSection(Game
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 #elif RELEASE
 var connectionString =  File.ReadAllText("D:\\home\\data\\mysql\\MYSQLCONNSTR_localdb.txt");
-connectionString.Replace("Data Source", "Server");
+connectionString = connectionString.Replace("Data Source", "Server");
+connectionString = connectionString.Replace(":", ",");
 #endif
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
