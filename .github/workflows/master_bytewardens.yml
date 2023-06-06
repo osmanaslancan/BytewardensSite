@@ -22,10 +22,13 @@ jobs:
           dotnet-version: '6.0.x'
           include-prerelease: true
 
-      - name: Install npm
+      - name: Setup Node
         uses: actions/setup-node@v3
         with:
           node-version: 18
+
+      - name: Install npm dependencies
+        run: npm install
 
       - name: Build with dotnet
         run: dotnet build --configuration Release
