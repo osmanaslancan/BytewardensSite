@@ -29,6 +29,7 @@ jobs:
 
       - name: Install npm dependencies
         run: npm install
+        working-directory: ./Bytewardens/
 
       - name: Build with dotnet
         run: dotnet build --configuration Release
