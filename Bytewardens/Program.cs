@@ -4,6 +4,7 @@ using Bytewardens.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Text.RegularExpressions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,8 +17,8 @@ builder.Services.Configure<GameApiOptions>(builder.Configuration.GetSection(Game
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 #elif RELEASE
 var connectionString =  File.ReadAllText("D:\\home\\data\\mysql\\MYSQLCONNSTR_localdb.txt");
-connectionString = connectionString.Replace("Data Source", "Server");
-connectionString = connectionString.Replace(":", ",");
+connectionString = Regex.Replace(connectionString, "Database=(\\w*);Data Source=([\\d.]*):(.*);User Id=(.*);Password=(.*)", "Server=$2;Port=$3;Uid=$4;Pwd=$5;Database=$1;");
+Console.WriteLine(connectionString);
 #endif
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
