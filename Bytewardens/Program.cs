@@ -23,11 +23,7 @@ Console.WriteLine(connectionString);
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
-#if DEBUG
-    options.UseSqlServer(connectionString);
-#else
     options.UseMySQL(connectionString);
-#endif
 }
     );
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
