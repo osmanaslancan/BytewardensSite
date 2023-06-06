@@ -57,7 +57,11 @@ namespace Bytewardens.Handlers
 
             foreach (var key in query.Keys)
             {
-                requestQuery[KeyMapping[key]] = query[key].ToString();
+                if (KeyMapping.ContainsKey(key))
+                {
+                    requestQuery.Add(KeyMapping[key], query[key].ToString());
+                    continue;
+                }
             }
 
             var response = await SendGetRequestAsync<List<ListOfDealsResponse>>("deals", requestQuery);

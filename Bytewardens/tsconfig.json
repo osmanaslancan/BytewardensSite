@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "noImplicitAny": false,
+    "noEmitOnError": true,
+    "removeComments": false,
+    "sourceMap": true,
+    "target": "ES6",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "outDir": "wwwroot/Scripts/",
+    "types": [
+      "jquery"
+    ]
+  },
+  "include": [
+    "Views/**/*",
+    "node_modules"
+  ],
+  "exclude": [
+    "node_modules",
+    "wwwroot"
+  ]
+}

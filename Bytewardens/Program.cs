@@ -1,5 +1,8 @@
+using Bytewardens.Data;
 using Bytewardens.Handlers;
 using Bytewardens.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,6 +11,20 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddHttpClient<IGameService, GameService>();
 builder.Services.AddOptions();
 builder.Services.Configure<GameApiOptions>(builder.Configuration.GetSection(GameApiOptions.SectionKey));
+#if DEBUG
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+#elif RELEASE
+var connectionString = Environment.GetEnvironmentVariable("MYSQLCONNSTR_localdb");
+#endif
+
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(connectionString));
+builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+
+builder.Services.AddDefaultIdentity<IdentityUser>(options =>
+{
+
+}).AddEntityFrameworkStores<ApplicationDbContext>();
 
 var app = builder.Build();
 
@@ -25,6 +42,8 @@ app.UseStaticFiles();
 app.UseRouting();
 
 app.UseAuthorization();
+
+app.MapRazorPages();
 
 app.MapControllerRoute(
     name: "default",
