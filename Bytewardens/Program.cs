@@ -22,16 +22,14 @@ Console.WriteLine(connectionString);
 #endif
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-{
-    options.UseMySQL(connectionString);
-}
-    );
+    options.UseMySQL(connectionString)
+);
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddDefaultIdentity<IdentityUser>(options =>
 {
+    options.SignIn.RequireConfirmedAccount = true;
 }).AddEntityFrameworkStores<ApplicationDbContext>();
-
 
 var app = builder.Build();
 
@@ -58,13 +56,12 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
-
+app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapControllers();
 
 app.MapRazorPages();
 
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();

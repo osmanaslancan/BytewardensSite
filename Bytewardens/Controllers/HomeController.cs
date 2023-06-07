@@ -1,5 +1,6 @@
 ﻿using Bytewardens.Handlers;
 using Bytewardens.Models;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 
@@ -15,7 +16,7 @@ namespace Bytewardens.Controllers
             _logger = logger;
             this.gameService = gameService;
         }
-
+        [Route("/"), HttpGet]
         public async Task<IActionResult> IndexAsync()
         {
             var games = await gameService.ListGamesAsync(Request.Query);
@@ -28,6 +29,7 @@ namespace Bytewardens.Controllers
         [Route("/DealDetail"), HttpPost]
         public async Task<IActionResult> DealDetailAsync([FromForm] string DealId)
         {
+            
             DealId = Uri.UnescapeDataString(DealId);
             var deal = await gameService.RetriveDealAsync(DealId);
             var store = await gameService.RetriveStore(deal.GameInfo.StoreID);
