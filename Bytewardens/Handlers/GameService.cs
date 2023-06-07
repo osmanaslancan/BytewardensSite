@@ -13,6 +13,7 @@ namespace Bytewardens.Handlers
         Task<DealRetriveResponse> RetriveDealAsync(string dealId);
         Task<List<Store>> ListStoresAsnyc();
         Task<Store?> RetriveStore(string storeId);
+        Task<List<ListOfDealsResponse>?> RetriveDealsForGames(List<string> games);
     };
 
     public class GameService : IGameService
@@ -111,6 +112,31 @@ namespace Bytewardens.Handlers
             var stores = await ListStoresAsnyc();
 
             return stores.FirstOrDefault(x => x.StoreID == storeId);
+        }
+
+        public async Task<List<ListOfDealsResponse>?> RetriveDealsForGames(List<string> games)
+        {
+            var lookupResponse = await SendGetRequestAsync<List<GameLookupResponse>>("games", new Dictionary<string, string>
+            {
+                { "format", "array" },
+                { "ids", string.Join(",", games) }
+            });
+
+            var deals = lookupResponse?.Body?.SelectMany(game => game.Deals.Select(deal => new ListOfDealsResponse
+            {
+                DealID = deal.DealID,
+                DealRating = null,
+                GameID = game.Info.GameID,
+                StoreID = deal.StoreID,
+                NormalPrice = deal.RetailPrice,
+                SalePrice = deal.Price,
+                Savings = deal.Savings,
+                Thumb = game.Info.Thumb,
+                SteamAppID = game.Info.SteamAppID,
+                Title = game.Info.Title,
+            })).ToList();
+
+            return deals ?? new();
         }
     }
 }

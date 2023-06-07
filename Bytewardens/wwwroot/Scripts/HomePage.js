@@ -60288,6 +60288,7 @@ var HomePageGrid = class {
       "Price": "salePrice"
     };
     var _a;
+    this.model = data;
     this.storesById = {};
     (_a = data.stores) == null ? void 0 : _a.forEach((store) => {
       this.storesById[store.storeID] = store;
@@ -60297,6 +60298,8 @@ var HomePageGrid = class {
   }
   SetupPager(data) {
     var _a;
+    if (!this.model.serverSide)
+      return;
     var pager = $("#pager");
     pager.css("height", "60px");
     var url = new URL(window.location.href);
@@ -60309,7 +60312,7 @@ var HomePageGrid = class {
     info.html(`
         Showing <span class="font-bold">${pageSize * (currentPage - 1) + 1}</span> to 
         <span class="font-bold">${pageSize * (currentPage - 1) + data.games.length}</span> 
-        of <span class="font-bold">${maxPages * pageSize}</span>`);
+        of <span class="font-bold">${maxPages == 1 ? data.games.length : maxPages * pageSize}</span>`);
     var buttons = $("<div></div>").appendTo(pager);
     buttons.addClass("flex gap-2 justify-center items-center ml-8");
     buttons.html(`
@@ -60355,6 +60358,8 @@ var HomePageGrid = class {
     }
   }
   sort(field, desc) {
+    if (!this.model.serverSide)
+      return;
     var url = new URL(window.location.href);
     if (field) {
       field = field.charAt(0).toUpperCase() + field.slice(1);
@@ -60367,6 +60372,8 @@ var HomePageGrid = class {
     window.location.href = url.href;
   }
   filterTitle(text) {
+    if (!this.model.serverSide)
+      return;
     var url = new URL(window.location.href);
     if (text) {
       url.searchParams.set("FilterTitle", text);
@@ -60409,7 +60416,7 @@ var HomePageGrid = class {
             maxNumConditions: 1,
             trimInput: false,
             filterOptions: ["contains"],
-            textMatcher: (params) => {
+            textMatcher: !this.model.serverSide ? void 0 : (params) => {
               if (this.oldTitleFilter == params.filterText)
                 return;
               if (params.filterText) {
@@ -60514,11 +60521,70 @@ var HomePageGrid = class {
     return link[0];
   }
   FavoriteRenderer(params) {
-    var link = $("<a></a>");
+    var link = $("<div></div>");
     link.addClass("w-full h-full flex justify-center items-center no-underline");
     var icon = $("<i></i>");
     icon.addClass("fa-regular cursor-pointer fa-heart text-red-500 fa-xl");
     link.append(icon);
+    link.data("row-id", params.data.gameID);
+    if (this.model.userFavorites) {
+      if (this.model.userFavorites.indexOf(params.data.gameID) >= 0) {
+        icon.addClass("fas");
+      }
+    }
+    if (this.model.isLoggedIn) {
+      link.on("click", (e) => {
+        if (this.model.userFavorites && this.model.userFavorites.indexOf($(e.currentTarget).data("row-id")) == -1) {
+          $.ajax("/AddToFavorites", {
+            method: "post",
+            data: {
+              "GameId": $(e.currentTarget).data("row-id")
+            },
+            success: () => {
+              var gameId = $(e.currentTarget).data("row-id");
+              if (this.model.userFavorites) {
+                if (this.model.userFavorites.indexOf(gameId) == -1) {
+                  this.model.userFavorites.push(gameId);
+                }
+              }
+              var changedRows = [];
+              var rows = this.gridOptions.api.forEachNode((x) => {
+                if (x.data.gameID == gameId) {
+                  changedRows.push(x);
+                }
+              });
+              this.gridOptions.api.redrawRows({
+                rowNodes: changedRows
+              });
+            }
+          });
+        } else {
+          $.ajax("/RemoveFromFavorites", {
+            method: "post",
+            data: {
+              "GameId": $(e.currentTarget).data("row-id")
+            },
+            success: () => {
+              var gameId = $(e.currentTarget).data("row-id");
+              if (this.model.userFavorites) {
+                if (this.model.userFavorites.indexOf(gameId) >= -1) {
+                  this.model.userFavorites.splice(this.model.userFavorites.indexOf(gameId), 1);
+                }
+              }
+              var changedRows = [];
+              var rows = this.gridOptions.api.forEachNode((x) => {
+                if (x.data.gameID == gameId) {
+                  changedRows.push(x);
+                }
+              });
+              this.gridOptions.api.redrawRows({
+                rowNodes: changedRows
+              });
+            }
+          });
+        }
+      });
+    }
     return link[0];
   }
   MetaCriticRenderer(params) {

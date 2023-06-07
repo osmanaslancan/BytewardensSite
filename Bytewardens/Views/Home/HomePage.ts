@@ -1,5 +1,6 @@
 import { Bean, ColDef, Column, ColumnState, Grid as AgGrid, GridOptions, ICellRendererParams, ITextFilterParams, PaginationProxy, RowContainerName, SortDirection, TextFormatter } from "ag-grid-community";
 import { Button, Tooltip } from "bootstrap";
+import { post } from "jquery";
 import moment from "moment";
 
 export interface Game {
@@ -39,7 +40,9 @@ export interface HomePageModel {
     games: Game[]
     maxPages: number,
     stores: Store[],
-    isLoggedIn
+    isLoggedIn: boolean,
+    userFavorites: string[],
+    serverSide: boolean
 }
 export class HomePageGrid {
 
@@ -47,8 +50,10 @@ export class HomePageGrid {
     private gridOptions: GridOptions<Game>;
     private oldTitleFilter: string;
     private storesById;
+    private model: HomePageModel;
 
     constructor(element, data: HomePageModel) {
+        this.model = data;
         this.storesById = {};
         data.stores?.forEach(store => {
             this.storesById[store.storeID] = store;
@@ -58,6 +63,8 @@ export class HomePageGrid {
     }
 
     SetupPager(data: HomePageModel) {
+        if (!this.model.serverSide)
+            return;
         var pager = $("#pager");
         pager.css("height", "60px");
         var url = new URL(window.location.href);
@@ -70,7 +77,7 @@ export class HomePageGrid {
         info.html(`
         Showing <span class="font-bold">${pageSize * (currentPage - 1) + 1}</span> to 
         <span class="font-bold">${pageSize * (currentPage - 1) + data.games.length}</span> 
-        of <span class="font-bold">${maxPages * pageSize}</span>`)
+        of <span class="font-bold">${maxPages == 1 ? data.games.length : maxPages * pageSize}</span>`)
 
         var buttons = $("<div></div>").appendTo(pager);
         buttons.addClass("flex gap-2 justify-center items-center ml-8");
@@ -115,6 +122,8 @@ export class HomePageGrid {
     }
 
     sort(field?: string, desc?) {
+        if (!this.model.serverSide)
+            return;
         var url = new URL(window.location.href);
         if (field) {
             field = field.charAt(0).toUpperCase() + field.slice(1)
@@ -129,6 +138,8 @@ export class HomePageGrid {
     }
 
     filterTitle(text: string) {
+        if (!this.model.serverSide)
+            return;
         var url = new URL(window.location.href);
         if (text) {
             url.searchParams.set("FilterTitle", text);
@@ -179,7 +190,7 @@ export class HomePageGrid {
                         maxNumConditions: 1,
                         trimInput: false,
                         filterOptions: ["contains"],
-                        textMatcher: (params) => {
+                        textMatcher: !this.model.serverSide ? undefined : (params) => {
                             if (this.oldTitleFilter == params.filterText)
                                 return;
 
@@ -298,11 +309,71 @@ export class HomePageGrid {
     }
 
     FavoriteRenderer(params: ICellRendererParams<Game>) {
-        var link = $("<a></a>");
+        var link = $("<div></div>");
         link.addClass("w-full h-full flex justify-center items-center no-underline");
         var icon = $("<i></i>");
         icon.addClass("fa-regular cursor-pointer fa-heart text-red-500 fa-xl");
         link.append(icon);
+        link.data("row-id", params.data.gameID)
+        if (this.model.userFavorites) {
+            if (this.model.userFavorites.indexOf(params.data.gameID) >= 0) {
+                icon.addClass("fas");
+            }
+        }
+        if (this.model.isLoggedIn) {
+            link.on('click', (e) => {
+                if (this.model.userFavorites && this.model.userFavorites.indexOf($(e.currentTarget).data("row-id")) == -1) {
+                    $.ajax("/AddToFavorites", {
+                        method: "post",
+                        data: {
+                            "GameId": $(e.currentTarget).data("row-id")
+                        },
+                        success: () => {
+                            var gameId = $(e.currentTarget).data("row-id");
+                            if (this.model.userFavorites) {
+                                if (this.model.userFavorites.indexOf(gameId) == -1) {
+                                    this.model.userFavorites.push(gameId);
+                                }
+                            }
+                            var changedRows = [];
+                            var rows = this.gridOptions.api.forEachNode(x => {
+                                if (x.data.gameID == gameId) {
+                                    changedRows.push(x);
+                                }
+                            })
+                            this.gridOptions.api.redrawRows({
+                                rowNodes: changedRows
+                            });
+                        }
+                    })
+                }
+                else {
+                    $.ajax("/RemoveFromFavorites", {
+                        method: "post",
+                        data: {
+                            "GameId": $(e.currentTarget).data("row-id")
+                        },
+                        success: () => {
+                            var gameId = $(e.currentTarget).data("row-id");
+                            if (this.model.userFavorites) {
+                                if (this.model.userFavorites.indexOf(gameId) >= -1) {
+                                    this.model.userFavorites.splice(this.model.userFavorites.indexOf(gameId), 1);
+                                }
+                            }
+                            var changedRows = [];
+                            var rows = this.gridOptions.api.forEachNode(x => {
+                                if (x.data.gameID == gameId) {
+                                    changedRows.push(x);
+                                }
+                            })
+                            this.gridOptions.api.redrawRows({
+                                rowNodes: changedRows
+                            });
+                        }
+                    })
+                }
+            })
+        }
         return link[0];
     }
 
