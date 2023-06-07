@@ -6,6 +6,7 @@ using System.Diagnostics;
 
 namespace Bytewardens.Controllers
 {
+    [Route("/[action]")]
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
@@ -19,11 +20,9 @@ namespace Bytewardens.Controllers
         [Route("/"), HttpGet]
         public async Task<IActionResult> IndexAsync()
         {
-            var games = await gameService.ListGamesAsync(Request.Query);
-            return View(new HomeViewModel
-            {
-                Games = games
-            });
+            var model = await gameService.ListGamesAsync(Request.Query);
+            model.Stores = await gameService.ListStoresAsnyc();
+            return View(model);
         }
 
         [Route("/DealDetail"), HttpPost]
@@ -40,7 +39,7 @@ namespace Bytewardens.Controllers
                 Store = store
             });
         }
-
+        
         public IActionResult Privacy()
         {
             return View();

@@ -7,11 +7,14 @@
     "css:watch": "npx tailwindcss -i ./wwwroot/css/site.css -o ./wwwroot/css/output.css --watch"
   },
   "devDependencies": {
+    "@types/bootstrap": "^5.2.6",
     "@types/jquery": "^3.5.16",
     "tailwindcss": "^3.3.2"
   },
   "dependencies": {
     "ag-grid-community": "^29.3.5",
-    "esbuild": "0.17.19"
+    "bootstrap": "^5.3.0",
+    "esbuild": "0.17.19",
+    "moment": "^2.29.4"
   }
 }

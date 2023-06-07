@@ -8,8 +8,10 @@
     "module": "ESNext",
     "moduleResolution": "node",
     "outDir": "wwwroot/Scripts/",
+    "allowSyntheticDefaultImports": true,
     "types": [
-      "jquery"
+      "jquery",
+      "bootstrap"
     ]
   },
   "include": [

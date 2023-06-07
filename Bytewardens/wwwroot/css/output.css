@@ -14,8 +14,8 @@
   margin-bottom: 0.75rem;
 }
 
-.mt-2 {
-  margin-top: 0.5rem;
+.ml-8 {
+  margin-left: 2rem;
 }
 
 .flex {
@@ -34,16 +34,16 @@
   height: 100%;
 }
 
-.w-48 {
-  width: 12rem;
-}
-
 .w-9 {
   width: 2.25rem;
 }
 
 .w-full {
   width: 100%;
+}
+
+.flex-1 {
+  flex: 1 1 0%;
 }
 
 .cursor-pointer {
@@ -58,8 +58,20 @@
   align-items: center;
 }
 
+.justify-end {
+  justify-content: flex-end;
+}
+
 .justify-center {
   justify-content: center;
+}
+
+.gap-1 {
+  gap: 0.25rem;
+}
+
+.gap-2 {
+  gap: 0.5rem;
 }
 
 .bg-white {
@@ -83,8 +95,8 @@
   padding: 0.5rem;
 }
 
-.pb-3 {
-  padding-bottom: 0.75rem;
+.p-8 {
+  padding: 2rem;
 }
 
 .text-center {
@@ -97,6 +109,20 @@
 
 .font-bold {
   font-weight: 700;
+}
+
+.text-\[\#212529\]\/25 {
+  color: rgb(33 37 41 / 0.25);
+}
+
+.text-\[\#66C0F4\] {
+  --tw-text-opacity: 1;
+  color: rgb(102 192 244 / var(--tw-text-opacity));
+}
+
+.text-\[\#A34C25\] {
+  --tw-text-opacity: 1;
+  color: rgb(163 76 37 / var(--tw-text-opacity));
 }
 
 .text-red-500 {
@@ -117,6 +143,10 @@
   text-decoration-line: none;
 }
 
+.filter {
+  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
+}
+
 html {
   font-size: 14px;
 }
@@ -130,10 +160,7 @@ html {
 html {
   position: relative;
   min-height: 100%;
-}
-
-body {
-  margin-bottom: 60px;
+  height: 100%;
 }
 
 .deals-table td {

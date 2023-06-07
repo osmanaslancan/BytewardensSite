@@ -9,7 +9,7 @@ namespace Bytewardens.Handlers
 {
     public interface IGameService
     {
-        Task<List<ListOfDealsResponse>> ListGamesAsync(IQueryCollection query);
+        Task<HomeViewModel> ListGamesAsync(IQueryCollection query);
         Task<DealRetriveResponse> RetriveDealAsync(string dealId);
         Task<List<Store>> ListStoresAsnyc();
         Task<Store?> RetriveStore(string storeId);
@@ -17,8 +17,15 @@ namespace Bytewardens.Handlers
 
     public class GameService : IGameService
     {
+        private class GameApiResponse<T>
+        {
+            public T? Body { get; set; }
+            public HttpResponseMessage? Response { get; set; }
+        }
+
         private readonly HttpClient httpClient;
         private readonly IOptions<GameApiOptions> options;
+        private List<Store> stores;
 
         public GameService(HttpClient httpClient, IOptions<GameApiOptions> options)
         {
@@ -27,7 +34,7 @@ namespace Bytewardens.Handlers
             httpClient.BaseAddress = new Uri(options.Value.ApiRoot);
         }
 
-        private async Task<T?> SendGetRequestAsync<T>(string path, Dictionary<string, string>? query = null)
+        private async Task<GameApiResponse<T>?> SendGetRequestAsync<T>(string path, Dictionary<string, string>? query = null)
         {
             var releativePath = path;
             if (query != null)
@@ -38,7 +45,11 @@ namespace Bytewardens.Handlers
             var response = await httpClient.GetAsync(releativePath);
             if (response.IsSuccessStatusCode)
             {
-                return await response.Content.ReadFromJsonAsync<T>();
+                return new GameApiResponse<T>
+                {
+                    Body = await response.Content.ReadFromJsonAsync<T>(),
+                    Response = response,
+                };
             }
             else
             {
@@ -49,10 +60,13 @@ namespace Bytewardens.Handlers
         Dictionary<string, string> KeyMapping = new()
         {
             { "Page", "pageNumber" },
-            { "MaxPrice", "upperPrice" }
+            { "MaxPrice", "upperPrice" },
+            { "Sort", "sortBy" },
+            { "Desc", "desc" },
+            { "FilterTitle", "title" }
         };
 
-        public async Task<List<ListOfDealsResponse>> ListGamesAsync(IQueryCollection query)
+        public async Task<HomeViewModel> ListGamesAsync(IQueryCollection query)
         {
             var requestQuery = new Dictionary<string, string>();
 
@@ -66,8 +80,9 @@ namespace Bytewardens.Handlers
             }
 
             var response = await SendGetRequestAsync<List<ListOfDealsResponse>>("deals", requestQuery);
-
-            return response ?? new();
+            string? maxPagesString = response?.Response?.Headers.GetValues("X-Total-Page-Count")
+                .FirstOrDefault();
+            return new HomeViewModel() { Games = response?.Body ?? new(), MaxPages = maxPagesString != null ? int.Parse(maxPagesString) : null };
         }
 
         public async Task<DealRetriveResponse> RetriveDealAsync(string dealId)
@@ -77,14 +92,18 @@ namespace Bytewardens.Handlers
                 { "id", dealId }
             });
 
-            return response ?? new();
+            return response?.Body ?? new();
         }
 
         public async Task<List<Store>> ListStoresAsnyc()
         {
-            var response = await SendGetRequestAsync<List<Store>>("stores");
+            if (stores == null)
+            {
+                var response = await SendGetRequestAsync<List<Store>>("stores");
+                stores = response?.Body ?? new(); ;
+            }
 
-            return response ?? new();
+            return stores;
         }
 
         public async Task<Store?> RetriveStore(string storeId)

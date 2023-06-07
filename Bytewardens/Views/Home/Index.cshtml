@@ -1,20 +1,20 @@
 ﻿@using System.Globalization;
+@using Microsoft.AspNetCore.Identity;
+@inject SignInManager<IdentityUser> SignInManager
 @model HomeViewModel
 @{
     ViewData["Title"] = "Home Page";
+    Model.IsLoggedIn = SignInManager.IsSignedIn(User);
 }
-
-<form class="form-floating m-3" method="get">
-    <input type="number" class="form-control w-48" value="@Context.Request.Query["MaxPrice"]" name="MaxPrice" id="FilterMaxPrice" placeholder="Max Fiyat">
-    <label for="FilterMaxPrice">Max Fiyat</label>
-    <input type="submit" value="Uygula" class="btn btn-primary mt-2"/>
-</form>
-<h2 class="m-3">
-    Ucuza Oyun Teklifleri
-</h2>
-<div id="myGrid" class="ag-theme-alpine" style="height: 500px"></div>
+<section class="d-flex flex-column h-full">
+    <h2 class="m-3">
+        Sale Offers
+    </h2>
+    <div id="myGrid" class="ag-theme-alpine flex-1"></div>
+    <div id="pager"></div>
+</section>
 
 <script type="module">
     import * as imports from "/Scripts/HomePage.js"
-    imports.default && imports.default(@Json.Serialize(Model.Games))
+    imports.default && imports.default(@Json.Serialize(Model))
 </script>
